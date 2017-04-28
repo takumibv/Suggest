@@ -4,8 +4,10 @@ import android.app.SearchManager;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Xml;
 import android.view.View;
 import android.widget.AdapterView;
@@ -24,13 +26,18 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
+    private final static String KEY_LIST = "MainActivity.resultlist";
+    private static final String TAG = "MainActivity";
     private EditText inputText;
     private ArrayAdapter<String> resultAdapter;
+    ArrayList<String> result;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG ,"onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        if (savedInstanceState != null) result = savedInstanceState.getStringArrayList(KEY_LIST);
 
         inputText = (EditText)findViewById(R.id.input_text);
         Button suggestButton = (Button)findViewById(R.id.suggest_button);
@@ -55,6 +62,28 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+        Log.d(TAG ,"onCreate_end");
+    }
+
+    @Override
+    protected void onResume() {
+        Log.d(TAG ,"onResume");
+        super.onResume();
+        showList();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putStringArrayList(KEY_LIST, result);
+    }
+
+    private void showList(){
+        if(result != null) {
+            resultAdapter.clear();
+            resultAdapter.addAll((List<String>)result);
+            resultAdapter.notifyDataSetChanged();
+        }
     }
 
     private final static int MSG_RESULT = 1111;
@@ -84,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void run() {
-            ArrayList<String> result = new ArrayList<>();
+            result = new ArrayList<>();
             HttpURLConnection conn = null;
             String error = null;
             try {
